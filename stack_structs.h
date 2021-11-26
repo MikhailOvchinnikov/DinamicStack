@@ -17,7 +17,6 @@ typedef struct Stack Stack;
 /// </summary>
 typedef struct Data Data;
 
-
 typedef struct Stack
 {
     //Left canary security
@@ -27,7 +26,7 @@ typedef struct Stack
     char name[ST_S] = {};
 
     //Struct for safe stack element
-    Data* Data;
+    Data* data;
 
     //HashValue
     unsigned int hash;
@@ -52,14 +51,17 @@ typedef struct Data
     int* data_canary_left;
     int* data_canary_right;
 
-    //Capacity of stack
+    //Current size of stack with initialization elements
     int size;
 
-    //Current size of stack with initialization elements
+    //Capacity of stack
     int capacity;
 
     //HashValue
     unsigned int hash;
+
+    //HashValue
+    unsigned int hash_data;
 
     //Right canary security
     unsigned int canary_right;

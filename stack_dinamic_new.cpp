@@ -3,163 +3,232 @@
 #include <stdlib.h>
 #include <cassert>
 #include <stdio.h>
+#include <string.h>
+#include <errno.h>
 
-//Defaul capacity of stack
+
+//Defaul capacity of stack_ptr
 #define DEF_CAP 10
 
-//Coefficient of resize stack's capacity
+//Coefficient of resize stack_ptr's capacity
 #define RESIZE_COEF 2
 
 //Canary's value
 #define CANARY 0xFF
 
-//Def function for check stack adequate
-#define StackOK(stack) { \
-AssertFunction(stack);	 \
-}
+//Def function for check stack_ptr adequate
+#define StackOK(stack_ptr, line, func, file) AssertFunction(stack_ptr, line, func, file)
 
+#define NotNULL(stack_ptr) StackExists(stack_ptr)
 
 
 Stack* CreateStack(const char stack_name[])
 {
-    Stack* new_stack = (Stack*)malloc(sizeof(Stack));
-    new_stack->Data = (Data*)malloc(sizeof(Data));
-    new_stack->Data->capacity = DEF_CAP;
-    new_stack->Data->size = 0;
+    Stack* new_stack = (Stack*)calloc(1, sizeof(Stack));
+    new_stack->data = (Data*)calloc(1, sizeof(Data));
+    new_stack->data->memory = (int*)calloc(DEF_CAP + 2, sizeof(int));
 
-    new_stack->Data->memory = (int*)calloc(new_stack->Data->capacity + 2, sizeof(int));
-    new_stack->Data->data_canary_left = &(new_stack->Data->memory[0]);
-    new_stack->Data->data_canary_right = &(new_stack->Data->memory[new_stack->Data->capacity + 1]);
+    NotNULL(new_stack);
+    if (errno)
+    {
+        FileLog("Error command %s of the stack \"%s\"\n", __FUNCTION__, new_stack->name);
+        return nullptr;
+    }
 
-    new_stack->Data->memory[0] = CANARY;
-    new_stack->Data->memory[new_stack->Data->capacity + 1] = CANARY;
+    new_stack->data->capacity = DEF_CAP;
+    new_stack->data->size = 0;
+
+    new_stack->data->data_canary_left = &(new_stack->data->memory[0]);
+    new_stack->data->data_canary_right = &(new_stack->data->memory[new_stack->data->capacity + 1]);
+
+    new_stack->data->memory[0] = CANARY;
+    new_stack->data->memory[new_stack->data->capacity + 1] = CANARY;
     new_stack->canary_right = CANARY;
     new_stack->canary_left = CANARY;
-    new_stack->Data->canary_left = CANARY;
-    new_stack->Data->canary_right = CANARY;
+    new_stack->data->canary_left = CANARY;
+    new_stack->data->canary_right = CANARY;
 
-    new_stack->Data->data = &(new_stack->Data->memory[1]);
+    new_stack->data->data = &(new_stack->data->memory[1]);
     NameInititialization(new_stack->name, stack_name);
-    HashNull(&(new_stack->Data->hash), &new_stack->hash);
-    new_stack->hash = HashFunc(new_stack, sizeof(*new_stack));
-    new_stack->Data->hash = HashFunc(new_stack->Data, sizeof(*new_stack->Data));
+    HashClear(new_stack);
+    HashCalc(new_stack);
+    StackOK(new_stack, __LINE__, __FUNCTION__, __FILE__);
 
-    StackOK(new_stack);
-
-    return new_stack;
+    if (errno)
+    {
+        FileLog("Error command %s of the stack \"%s\"\n", __FUNCTION__, new_stack->name);
+        return nullptr;
+    }
+    else
+    {
+        FileLog("Stack \"%s\"was created successfully\n", new_stack->name);
+        return new_stack;
+    }
 }
 
 
-void Push(Stack* stack, const int value)
+int Push(Stack* stack_ptr, const int value)
 {
-    if (stack == NULL)
+    StackOK(stack_ptr, __LINE__, __FUNCTION__, __FILE__);
+    if (errno)
     {
-        AssertFunction(stack);
+        FileLog("Error command %s of the stack \"%s\"\n", __FUNCTION__, stack_ptr->name);
+        return errno;
     }
 
-    StackOK(stack);
-
-    if (stack->Data->size >= stack->Data->capacity)
+    if (stack_ptr->data->size >= stack_ptr->data->capacity)
     {
-        Resize(stack);
+        if (Resize(stack_ptr))
+        {
+            FileLog("Error command %s of the stack \"%s\"\n", __FUNCTION__, stack_ptr->name);
+            return errno;
+        }
     }
-    stack->Data->data[stack->Data->size] = value;
-    stack->Data->size++;
-    HashNull(&(stack->Data->hash), &stack->hash);
-    stack->hash = HashFunc(stack, sizeof(*stack));
-    stack->Data->hash = HashFunc(stack->Data, sizeof(*stack->Data));
+    stack_ptr->data->data[stack_ptr->data->size] = value;
+    stack_ptr->data->size++;
+    HashClear(stack_ptr);
+    HashCalc(stack_ptr);
 
-    StackOK(stack);
+    StackOK(stack_ptr, __LINE__, __FUNCTION__, __FILE__);
+    if (errno)
+    {
+        FileLog("Error command %s of the stack \"%s\"\n", __FUNCTION__, stack_ptr->name);
+    }
+    else
+    {
+
+        FileLog("Command %s of the stack \"%s\" was successful, value %d\n", __FUNCTION__, stack_ptr->name, value);
+    }
+    return errno;
 }
 
 
-int Pop(Stack* stack)
+int Pop(Stack* stack_ptr, int* destin)
 {
-    if (stack == NULL)
+    if (stack_ptr->data->size == 0)
     {
-        AssertFunction(stack);
-    }
-    if (stack->Data->size == 0)
-    {
-        printf("Error, size of stack is 0!\n");
-        exit(4);
+        FileLog("Error pop, size of stack data is 0!\n");
+        return errno = ErrorCodes::BADSIZE;
     }
 
-    StackOK(stack);
+    StackOK(stack_ptr, __LINE__, __FUNCTION__, __FILE__);
+    if (errno)
+    {
+        FileLog("Error command %s of the stack \"%s\"\n", __FUNCTION__, stack_ptr->name);
+        return errno;
+    }
 
-    stack->Data->data[stack->Data->size] = 0;
-    stack->Data->size--;
-    HashNull(&(stack->Data->hash), &stack->hash);
-    stack->hash = HashFunc(stack, sizeof(*stack));
-    stack->Data->hash = HashFunc(stack->Data, sizeof(*stack->Data));
+    *destin = stack_ptr->data->data[stack_ptr->data->size - 1];
+    stack_ptr->data->data[stack_ptr->data->size] = 0;
+    stack_ptr->data->size--;
 
-    StackOK(stack);
+    HashClear(stack_ptr);
+    HashCalc(stack_ptr);
 
-    return stack->Data->data[stack->Data->size];
+    StackOK(stack_ptr, __LINE__, __FUNCTION__, __FILE__);
+    if (errno)
+    {
+        FileLog("Error command %s of the stack \"%s\"\n", __FUNCTION__, stack_ptr->name);
+    }
+    else
+    {
+
+        FileLog("Command %s of the stack \"%s\" was successful, value %d\n", __FUNCTION__, stack_ptr->name, *destin);
+    }
+    return errno;
 }
 
 
-int Size(Stack* stack)
+int Size(Stack* stack_ptr, int* destin)
 {
-    if (stack == NULL)
+    StackOK(stack_ptr, __LINE__, __FUNCTION__, __FILE__);
+
+    if (errno)
     {
-        AssertFunction(stack);
+        FileLog("Error command %s of the stack \"%s\"\n", __FUNCTION__, stack_ptr->name);
+        return errno;
     }
+    *destin = stack_ptr->data->size;
 
-    StackOK(stack);
-
-    return stack->Data->size;
+    StackOK(stack_ptr, __LINE__, __FUNCTION__, __FILE__);
+    if (errno)
+    {
+        FileLog("Error command %s of the stack \"%s\"\n", __FUNCTION__, stack_ptr->name);
+    }
+    else
+    {
+        FileLog("Command %s of the stack \"%s\" was successful, value %d\n", __FUNCTION__, stack_ptr->name, stack_ptr->data->size);
+    }
+    return errno;
 }
 
 
-int Capacity(Stack* stack)
+int Capacity(Stack* stack_ptr, int* destin)
 {
-    if (stack == NULL)
+    StackOK(stack_ptr, __LINE__, __FUNCTION__, __FILE__);
+
+    if (errno)
     {
-        AssertFunction(stack);
+        FileLog("Error command %s of the stack \"%s\"\n", __FUNCTION__, stack_ptr->name);
+        return errno;
     }
 
-    StackOK(stack);
+    *destin = stack_ptr->data->capacity;
 
-    return stack->Data->capacity;
+    StackOK(stack_ptr, __LINE__, __FUNCTION__, __FILE__);
+    if (errno)
+    {
+        FileLog("Error command %s of the stack \"%s\"\n", __FUNCTION__, stack_ptr->name);
+    }
+    else
+    {
+        FileLog("Command %s of the stack \"%s\" was successful, value %d\n", __FUNCTION__, stack_ptr->name, stack_ptr->data->size);
+    }
+    return errno;
 }
 
 
-void Resize(Stack* stack)
+int Resize(Stack* stack_ptr)
 {
-    StackOK(stack);
+    StackOK(stack_ptr, __LINE__, __FUNCTION__, __FILE__);
 
-    stack->Data->capacity *= RESIZE_COEF;
-    stack->Data->memory = (int*)realloc(stack->Data->memory, (stack->Data->capacity + 2) * sizeof(int));
-    *stack->Data->data_canary_left = 0;
-    *stack->Data->data_canary_right = 0;
-    stack->Data->memory[0] = CANARY;
-    stack->Data->memory[stack->Data->capacity + 1] = CANARY;
-    stack->Data->data_canary_left = stack->Data->memory;
-    stack->Data->data_canary_right = &(stack->Data->memory[stack->Data->capacity + 1]);
-    stack->Data->data = &(stack->Data->memory[1]);
-
-    HashNull(&(stack->Data->hash), &stack->hash);
-    stack->hash = HashFunc(stack, sizeof(*stack));
-    stack->Data->hash = HashFunc(stack->Data, sizeof(*stack->Data));
-
-    StackOK(stack);
-}
-
-
-/*void Resize_to_size_stack(Stack* stack)
-{
-    if (stack == NULL)
+    if (errno)
     {
-        AssertFunction(stack);
+        FileLog("Error command %s of the stack \"%s\"\n", __FUNCTION__, stack_ptr->name);
+        return errno;
     }
-    StackOK(stack);
-    stack->Data->capacity = stack->Data->size;
-    stack->Data->data = (int*)realloc(stack->Data->data, stack->Data->capacity * sizeof(int));
-    //stack->hash = HashValueStack(stack);
-    //stack->Data->hash = HashValueArray(stack->Data, stack->Data->capacity);
-    StackOK(stack);
-}*/
+
+    stack_ptr->data->capacity *= RESIZE_COEF;
+    stack_ptr->data->memory = (int*)realloc(stack_ptr->data->memory, (stack_ptr->data->capacity + 2) * sizeof(int));
+
+    NotNULL(stack_ptr);
+
+    if(errno)
+    {
+        FileLog("Error command %s of the stack \"%s\"\n", __FUNCTION__, stack_ptr->name);
+        return errno;
+    }
+
+    stack_ptr->data->memory[0] = CANARY;
+    stack_ptr->data->memory[stack_ptr->data->capacity + 1] = CANARY;
+    stack_ptr->data->data_canary_left = &(stack_ptr->data->memory[0]);
+    stack_ptr->data->data_canary_right = &(stack_ptr->data->memory[stack_ptr->data->capacity + 1]);
+    stack_ptr->data->data = &(stack_ptr->data->memory[1]);
+
+    HashClear(stack_ptr);
+    HashCalc(stack_ptr);
+
+    StackOK(stack_ptr, __LINE__, __FUNCTION__, __FILE__);
+    if (errno)
+    {
+        FileLog("Error command %s of the stack \"%s\"\n", __FUNCTION__, stack_ptr->name);
+    }
+    else
+    {
+        FileLog("Command %s of the stack \"%s\" was successful\n", __FUNCTION__, stack_ptr->name);
+    }
+    return errno;
+}
 
 
 void NameInititialization(char target_name[], const char get_name[])
@@ -172,16 +241,12 @@ void NameInititialization(char target_name[], const char get_name[])
     target_name[i] = '\0';
 }
 
-void HashNull(unsigned int* hash_data,unsigned int* hash_stack)
-{
-    *hash_data = 0;
-    *hash_stack = 0;
-}
 
-
-void Clear(Stack** stack)
+void Clear(Stack* stack_ptr)
 {
-    free((*stack)->Data);
-    free(*stack);
-    *stack = NULL;
+    FileLog("Stack \"%s\" is deleting...\n", stack_ptr->name);
+    free(stack_ptr->data->memory);
+    free(stack_ptr->data);
+    free(stack_ptr);
+    FileLog("Deleting was successful");
 }
