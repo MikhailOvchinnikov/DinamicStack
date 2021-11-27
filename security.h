@@ -88,7 +88,7 @@ void Dump(const Stack* stack_ptr, int line = 0, const char* func = nullptr, cons
 /// Detect valid or not pointer to the stack
 /// </summary>
 /// <param name="stack_ptr">Pointer to the stack</param>
-void StackExists(Stack* stack_ptr);
+int StackExists(Stack* stack_ptr);
 
 
 /// <summary>
@@ -98,4 +98,4 @@ void StackExists(Stack* stack_ptr);
 /// <param name="line">Error occurence line</param>
 /// <param name="func">Error occurence function</param>
 /// <param name="file">Error occurence file</param>
-void AssertFunction(Stack* stack_ptr, int line, const char* func, const char* file);
+int AssertFunction(Stack* stack_ptr, int line, const char* func, const char* file);

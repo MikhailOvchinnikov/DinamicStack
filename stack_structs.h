@@ -4,8 +4,6 @@
 #define ST_S 32
 
 
-
-
 /// <summary>
 /// Struct with stack realization
 /// </summary>
@@ -16,6 +14,7 @@ typedef struct Stack Stack;
 /// Struct with data realization
 /// </summary>
 typedef struct Data Data;
+
 
 typedef struct Stack
 {
@@ -67,7 +66,3 @@ typedef struct Data
     unsigned int canary_right;
 
 } Data;
-
-
-
-

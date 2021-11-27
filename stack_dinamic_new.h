@@ -1,8 +1,5 @@
 #pragma once
 
-//Size of stack name
-#define ST_S 32
-
 
 /// <summary>
 /// Create and initializate new stack
@@ -10,7 +7,6 @@
 /// <param name="stack_name">Transmitted name of stack</param>
 /// <returns>Pointer to the initialized stack</returns>
 Stack* CreateStack(const char stack_name[]);
-
 
 /// <summary>
 /// Push transmitted element on top of transmitted stack and return 0 or return error code, if stack was corrupted
@@ -20,7 +16,6 @@ Stack* CreateStack(const char stack_name[]);
 /// <returns>Return 0, if all actions were succesfull, else return error code</returns>
 int Push(Stack* stack, const int value);
 
-
 /// <summary>
 /// Reduce the stack size by decrementation of element's size
 /// </summary>
@@ -28,7 +23,6 @@ int Push(Stack* stack, const int value);
 /// <param name="destin">Transmitted pointer to the variable</param>
 /// <returns>Return 0, if all actions were succesfull, else return error code</returns>
 int Pop(Stack* stack, int* destin);
-
 
 /// <summary>
 /// Return size of stack
@@ -38,7 +32,6 @@ int Pop(Stack* stack, int* destin);
 /// <returns>Return 0, if all actions were succesfull, else return error code</returns>
 int Size(Stack* stack, int* destin);
 
-
 /// <summary>
 /// Return capacity of stack
 /// </summary>
@@ -47,14 +40,12 @@ int Size(Stack* stack, int* destin);
 /// <returns>Return 0, if all actions were succesfull, else return error code</returns>
 int Capacity(Stack* stack, int* destin);
 
-
 /// <summary>
 /// Increase stack capacity of stack or do nothing, if stack is empty
 /// </summary>
 /// <param name="stack">Transmitted stack</param>
 /// <returns>Return 0, if all actions were succesfull, else return error code</returns>
 int Resize(Stack* stack);
-
 
 /// <summary>
 /// Initialization stack's name by transmitted name
@@ -63,6 +54,25 @@ int Resize(Stack* stack);
 /// <param name="get_name">Transmitted name</param>
 void NameInititialization(char target_name[], const char get_name[]);
 
+/// <summary>
+/// Initial pointers to data array, canaries and sizes 
+/// </summary>
+/// <param name="stack_ptr">Transmitted stack</param>
+void DataInitialization(Stack* stack_ptr);
+
+/// <summary>
+/// Increase value of stack size and add new value
+/// </summary>
+/// <param name="stack_ptr">Transmitted stack</param>
+/// <param name="value">Added value</param>
+void PushAction(Stack* stack_ptr, int value);
+
+/// <summary>
+/// Decrease value of stack size, remove last element and set 0 value
+/// </summary>
+/// <param name="stack_ptr">Transmitted stack</param>
+/// <param name="dst">Pointers for remove value</param>
+void PopAction(Stack* stack_ptr, int* dst);
 
 /// <summary>
 /// Delete stack by free memory

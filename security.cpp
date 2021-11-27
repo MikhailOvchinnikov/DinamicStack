@@ -38,22 +38,24 @@ int HashFunc(void* inf, int size)
 
 bool CheckHash(Stack* stack_ptr)
 {
+    Data* data_ptr = stack_ptr->data;
+
     int prev_h_stack = stack_ptr->hash;
-    int prev_h_dat = stack_ptr->data->hash;
-    int prev_h_arr = stack_ptr->data->hash_data;
+    int prev_h_dat = data_ptr->hash;
+    int prev_h_arr = data_ptr->hash_data;
 
     stack_ptr->hash = 0;
-    stack_ptr->data->hash = 0;
-    stack_ptr->data->hash_data = 0;
-
-    bool ret = (HashFunc(stack_ptr->data, sizeof(*(stack_ptr->data))) == prev_h_dat) &&
-        (HashFunc(stack_ptr, sizeof(*stack_ptr)) == prev_h_stack) && 
-        (HashFunc(stack_ptr->data->data, stack_ptr->data->capacity * sizeof(stack_ptr->data->data[0])) == prev_h_arr);
+    data_ptr->hash = 0;
+    data_ptr->hash_data = 0;
+    bool f_ret = HashFunc(data_ptr, sizeof(*(data_ptr))) == prev_h_dat;
+    bool s_ret = HashFunc(stack_ptr, sizeof(*stack_ptr)) == prev_h_stack;
+    bool t_ret = HashFunc(data_ptr->data, data_ptr->capacity * sizeof(data_ptr->data[0])) == prev_h_arr;
 
     stack_ptr->hash = prev_h_stack;
-    stack_ptr->data->hash = prev_h_dat;
-    stack_ptr->data->hash_data = prev_h_arr;
-    return ret;
+    data_ptr->hash = prev_h_dat;
+    data_ptr->hash_data = prev_h_arr;
+
+    return f_ret && s_ret && t_ret;
 }
 
 void HashClear(Stack* stack_ptr)
@@ -66,22 +68,31 @@ void HashClear(Stack* stack_ptr)
 
 void HashCalc(Stack* stack_ptr)
 {
+    Data* data_ptr = stack_ptr->data;
     stack_ptr->hash = HashFunc(stack_ptr, sizeof(*stack_ptr));
-    stack_ptr->data->hash = HashFunc(stack_ptr->data, sizeof(*stack_ptr->data));
-    stack_ptr->data->hash_data = HashFunc(stack_ptr->data->data, stack_ptr->data->capacity * sizeof(stack_ptr->data->data[0]));
+    data_ptr->hash = HashFunc(data_ptr, sizeof(*data_ptr));
+    data_ptr->hash_data = HashFunc(data_ptr->data, data_ptr->capacity * sizeof(data_ptr->data[0]));
 }
 
 
 bool CheckCanaries(Stack* stack_ptr)
 {
-    return ((stack_ptr->canary_left == CANARY) && (stack_ptr->canary_right == CANARY) && 
-        (stack_ptr->data->canary_left == CANARY) && (stack_ptr->data->canary_right == CANARY) &&
-        (*stack_ptr->data->data_canary_left == CANARY) && (*stack_ptr->data->data_canary_right == CANARY));
+    Data* data_ptr = stack_ptr->data;
+    bool f_ret = stack_ptr->canary_left == CANARY && stack_ptr->canary_right == CANARY;
+    bool s_ret = data_ptr->canary_left == CANARY && data_ptr->canary_right == CANARY;
+    bool t_ret = *data_ptr->data_canary_left == CANARY && *data_ptr->data_canary_right == CANARY;
+
+    return f_ret && s_ret && t_ret;
 }
 
 bool CheckSizes(Stack* stack_ptr)
 {
-    return ((stack_ptr->data->size <= stack_ptr->data->capacity) && (stack_ptr->data->size >= 0) && (stack_ptr->data->capacity >= 0));
+    Data* data_ptr = stack_ptr->data;
+    bool f_ret = data_ptr->size <= data_ptr->capacity;
+    bool s_ret = data_ptr->size >= 0;
+    bool t_ret = data_ptr->capacity >= 0;
+
+    return f_ret && s_ret && t_ret;
 }
 
 
@@ -91,14 +102,20 @@ void Dump(const Stack* stack_ptr, int line, const char* func, const char* file)
     {
         return;
     } 
+
+    Data* data_ptr = stack_ptr->data;
+    int cap = stack_ptr->data->capacity;
+    int size = stack_ptr->data->size;
+
     FileLog("Stack<>[%p] \"%s\" in the \"%d\" line of the function \"%s\" in programm at \"%s\"\n", stack_ptr, stack_ptr->name, line, func, file);
-    FileLog("Size = %d\nCapacity = %d\n", stack_ptr->data->size, stack_ptr->data->capacity);
-    FileLog("data[%p]\n\t{\n", &stack_ptr->data->data);
-    for (int i = 0; i < stack_ptr->data->capacity; i++)
+    FileLog("Size = %d\nCapacity = %d\n", size, cap);
+    FileLog("data[%p]\n\t{\n", &data_ptr->data);
+
+    for (int i = 0; i < cap; i++)
     {
-        if (i < stack_ptr->data->size)
+        if (i < size)
         {
-            FileLog("\t\t[%d] %d\n", i, stack_ptr->data->data[i]);
+            FileLog("\t\t[%d] %d\n", i, data_ptr->data[i]);
         }
         else
         {
@@ -109,17 +126,20 @@ void Dump(const Stack* stack_ptr, int line, const char* func, const char* file)
 }
 
 
-void StackExists(Stack* stack_ptr)
+int StackExists(Stack* stack_ptr)
 {
-    if (stack_ptr == NULL || stack_ptr->data == NULL || stack_ptr->data->memory == NULL)
+    Data* data_ptr = stack_ptr->data;
+    if (stack_ptr == NULL || data_ptr == NULL || data_ptr->memory == NULL)
     {
         printf("\n\n\t\tBAD STACK\n\n\n");
         errno = ErrorCodes::BADSTACK;
+        return -1;
     }
+    return 0;
 }
 
 
-void AssertFunction(Stack* stack_ptr, int line,const char* func,const char* file)
+int AssertFunction(Stack* stack_ptr, int line,const char* func,const char* file)
 {
     StackExists(stack_ptr);
     if(!errno)
@@ -140,5 +160,13 @@ void AssertFunction(Stack* stack_ptr, int line,const char* func,const char* file
             Dump(stack_ptr, line, func, file);
             errno = ErrorCodes::BADHASH;
         }
+    }
+    if (errno)
+    {
+        return -1;
+    }
+    else
+    {
+        return 0;
     }
 }
