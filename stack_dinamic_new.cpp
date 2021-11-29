@@ -27,7 +27,7 @@ Stack* CreateStack(const char stack_name[])
 {
     Stack* new_stack = (Stack*)calloc(1, sizeof(Stack));
     new_stack->data = (Data*)calloc(1, sizeof(Data));
-    new_stack->data->memory = (int*)calloc(INITIAL_CAPACITY + 2, sizeof(int));
+    new_stack->data->memory = (float*)calloc(INITIAL_CAPACITY + 2, sizeof(float));
 
     NotNULL(new_stack);
     if (errno)
@@ -64,7 +64,7 @@ Stack* CreateStack(const char stack_name[])
 }
 
 
-int Push(Stack* stack_ptr, const int value)
+int Push(Stack* stack_ptr, const float value)
 {
     if (StackOK(stack_ptr, __LINE__, __FUNCTION__, __FILE__))
     {
@@ -91,13 +91,13 @@ int Push(Stack* stack_ptr, const int value)
     }
     else
     {
-        FileLog("Command %s of the stack \"%s\" was successful, value %d\n", __FUNCTION__, stack_ptr->name, value);
+        FileLog("Command %s of the stack \"%s\" was successful, value %f\n", __FUNCTION__, stack_ptr->name, value);
     }
     return errno;
 }
 
 
-int Pop(Stack* stack_ptr, int* dst)
+int Pop(Stack* stack_ptr, float* dst)
 {
     if (StackOK(stack_ptr, __LINE__, __FUNCTION__, __FILE__))
     {
@@ -121,7 +121,7 @@ int Pop(Stack* stack_ptr, int* dst)
     }
     else
     {
-        FileLog("Command %s of the stack \"%s\" was successful, value %d\n", __FUNCTION__, stack_ptr->name, *dst);
+        FileLog("Command %s of the stack \"%s\" was successful, value %f\n", __FUNCTION__, stack_ptr->name, *dst);
     }
     return errno;
 }
@@ -179,7 +179,7 @@ int Resize(Stack* stack_ptr)
     }
 
     stack_ptr->data->capacity *= RESIZE_FACTOR;
-    stack_ptr->data->memory = (int*)realloc(stack_ptr->data->memory, (stack_ptr->data->capacity + 2) * sizeof(int));
+    stack_ptr->data->memory = (float*)realloc(stack_ptr->data->memory, (stack_ptr->data->capacity + 2) * sizeof(float));
 
     if(NotNULL(stack_ptr))
     {
@@ -219,14 +219,14 @@ void DataInitialization(Stack* stack_ptr)
 }
 
 
-void PushAction(Stack* stack_ptr, int value)
+void PushAction(Stack* stack_ptr, float value)
 {
     stack_ptr->data->data[stack_ptr->data->size] = value;
     stack_ptr->data->size++;
 }
 
 
-void PopAction(Stack* stack_ptr, int* dst)
+void PopAction(Stack* stack_ptr, float* dst)
 {
     *dst = stack_ptr->data->data[stack_ptr->data->size - 1];
     stack_ptr->data->data[stack_ptr->data->size] = 0;

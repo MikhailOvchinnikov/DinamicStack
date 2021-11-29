@@ -42,13 +42,13 @@ typedef struct Data
     unsigned int canary_left;
 
     //Data of values
-    int* data;
+    float* data;
 
     //Common data
-    int* memory;
+    float* memory;
 
-    int* data_canary_left;
-    int* data_canary_right;
+    float* data_canary_left;
+    float* data_canary_right;
 
     //Current size of stack with initialization elements
     int size;

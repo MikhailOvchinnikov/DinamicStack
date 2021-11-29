@@ -14,7 +14,7 @@ Stack* CreateStack(const char stack_name[]);
 /// <param name="stack">Transmitted stack</param>
 /// <param name="value">The value to put on the stack</param>
 /// <returns>Return 0, if all actions were succesfull, else return error code</returns>
-int Push(Stack* stack, const int value);
+int Push(Stack* stack, const float value);
 
 /// <summary>
 /// Reduce the stack size by decrementation of element's size
@@ -22,7 +22,7 @@ int Push(Stack* stack, const int value);
 /// <param name="stack">Transmitted stack</param>
 /// <param name="destin">Transmitted pointer to the variable</param>
 /// <returns>Return 0, if all actions were succesfull, else return error code</returns>
-int Pop(Stack* stack, int* destin);
+int Pop(Stack* stack, float* destin);
 
 /// <summary>
 /// Return size of stack
@@ -30,7 +30,7 @@ int Pop(Stack* stack, int* destin);
 /// <param name="stack">Transmitted stack</param>
 /// <param name="destin">Transmitted pointer to the variable</param>
 /// <returns>Return 0, if all actions were succesfull, else return error code</returns>
-int Size(Stack* stack, int* destin);
+int Size(Stack* stack, int* dst);
 
 /// <summary>
 /// Return capacity of stack
@@ -38,7 +38,7 @@ int Size(Stack* stack, int* destin);
 /// <param name="stack">Transmitted stack</param>
 /// <param name="destin">Transmitted pointer to the variable</param>
 /// <returns>Return 0, if all actions were succesfull, else return error code</returns>
-int Capacity(Stack* stack, int* destin);
+int Capacity(Stack* stack, int* dst);
 
 /// <summary>
 /// Increase stack capacity of stack or do nothing, if stack is empty
@@ -65,14 +65,14 @@ void DataInitialization(Stack* stack_ptr);
 /// </summary>
 /// <param name="stack_ptr">Transmitted stack</param>
 /// <param name="value">Added value</param>
-void PushAction(Stack* stack_ptr, int value);
+void PushAction(Stack* stack_ptr, float value);
 
 /// <summary>
 /// Decrease value of stack size, remove last element and set 0 value
 /// </summary>
 /// <param name="stack_ptr">Transmitted stack</param>
 /// <param name="dst">Pointers for remove value</param>
-void PopAction(Stack* stack_ptr, int* dst);
+void PopAction(Stack* stack_ptr, float* dst);
 
 /// <summary>
 /// Delete stack by free memory

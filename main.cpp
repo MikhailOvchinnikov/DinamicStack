@@ -7,7 +7,7 @@
 int main()
 {
     Stack* stack = CreateStack("Stack");
-    int value = 0;
+    float value = 0;
     int size = 0;
     Push(stack, 5);
     Push(stack, 13);
