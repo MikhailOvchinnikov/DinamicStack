@@ -27,7 +27,8 @@ Stack* CreateStack(const char stack_name[])
 {
     Stack* new_stack = (Stack*)calloc(1, sizeof(Stack));
     new_stack->data = (Data*)calloc(1, sizeof(Data));
-    new_stack->data->memory = (float*)calloc(INITIAL_CAPACITY + 2, sizeof(float));
+    Data* data_struct = new_stack->data;
+    data_struct->memory = (float*)calloc(INITIAL_CAPACITY + 2, sizeof(float));
 
     NotNULL(new_stack);
     if (errno)
@@ -37,13 +38,13 @@ Stack* CreateStack(const char stack_name[])
         return nullptr;
     }
 
-    new_stack->data->capacity = INITIAL_CAPACITY;
-    new_stack->data->size = 0;
+    data_struct->capacity = INITIAL_CAPACITY;
+    data_struct->size = 0;
 
     new_stack->canary_right = CANARY;
     new_stack->canary_left = CANARY;
-    new_stack->data->canary_left = CANARY;
-    new_stack->data->canary_right = CANARY;
+    data_struct->canary_left = CANARY;
+    data_struct->canary_right = CANARY;
 
     DataInitialization(new_stack);
     NameInititialization(new_stack->name, stack_name);
@@ -72,7 +73,10 @@ int Push(Stack* stack_ptr, const float value)
         return errno;
     }
 
-    if (stack_ptr->data->size >= stack_ptr->data->capacity)
+    int cap = stack_ptr->data->capacity;
+    int size = stack_ptr->data->size;
+
+    if (size >= cap)
     {
         if (Resize(stack_ptr))
         {
@@ -104,11 +108,6 @@ int Pop(Stack* stack_ptr, float* dst)
         FileLog("Error command %s of the stack \"%s\"\n", __FUNCTION__, stack_ptr->name);
         return errno;
     }
-    if (stack_ptr->data->size == 0)
-    {
-        FileLog("Error pop, size of stack data is 0!\n");
-        return errno = ErrorCodes::BADSIZE;
-    }
 
 
     PopAction(stack_ptr, dst);
@@ -134,7 +133,9 @@ int Size(Stack* stack_ptr, int* dst)
         FileLog("Error command %s of the stack \"%s\"\n", __FUNCTION__, stack_ptr->name);
         return errno;
     }
-    *dst = stack_ptr->data->size;
+    Data* data_struct = stack_ptr->data;
+
+    *dst = data_struct->size;
 
     if (StackOK(stack_ptr, __LINE__, __FUNCTION__, __FILE__))
     {
@@ -155,8 +156,9 @@ int Capacity(Stack* stack_ptr, int* dst)
         FileLog("Error command %s of the stack \"%s\"\n", __FUNCTION__, stack_ptr->name);
         return errno;
     }
+    Data* data_struct = stack_ptr->data;
 
-    *dst = stack_ptr->data->capacity;
+    *dst = data_struct->capacity;
 
     if (StackOK(stack_ptr, __LINE__, __FUNCTION__, __FILE__))
     {
@@ -177,9 +179,11 @@ int Resize(Stack* stack_ptr)
         FileLog("Error command %s of the stack \"%s\"\n", __FUNCTION__, stack_ptr->name);
         return errno;
     }
+    Data* data_struct = stack_ptr->data;
 
-    stack_ptr->data->capacity *= RESIZE_FACTOR;
-    stack_ptr->data->memory = (float*)realloc(stack_ptr->data->memory, (stack_ptr->data->capacity + 2) * sizeof(float));
+    data_struct->capacity *= RESIZE_FACTOR;
+    int cap = data_struct->capacity;
+    data_struct->memory = (float*)realloc(data_struct->memory, (cap + 2) * sizeof(float));
 
     if(NotNULL(stack_ptr))
     {
@@ -211,26 +215,35 @@ void NameInititialization(char target_name[], const char get_name[])
 
 void DataInitialization(Stack* stack_ptr)
 {
-    stack_ptr->data->data_canary_left = stack_ptr->data->memory;
-    stack_ptr->data->data_canary_right = &stack_ptr->data->memory[stack_ptr->data->capacity + 1];
-    stack_ptr->data->memory[0] = CANARY;
-    stack_ptr->data->memory[stack_ptr->data->capacity + 1] = CANARY;
-    stack_ptr->data->data = &stack_ptr->data->memory[1];
+    Data* data_struct = stack_ptr->data;
+
+    int cap = data_struct->capacity;
+    data_struct->data_canary_left = data_struct->memory;
+    data_struct->data_canary_right = &data_struct->memory[cap + 1];
+    data_struct->memory[0] = CANARY;
+    data_struct->memory[cap + 1] = CANARY;
+    data_struct->data = &data_struct->memory[1];
 }
 
 
 void PushAction(Stack* stack_ptr, float value)
 {
-    stack_ptr->data->data[stack_ptr->data->size] = value;
-    stack_ptr->data->size++;
+    Data* data_struct = stack_ptr->data;
+    int* size = &data_struct->size;
+
+    data_struct->data[*size] = value;
+    ++*size;
 }
 
 
 void PopAction(Stack* stack_ptr, float* dst)
 {
-    *dst = stack_ptr->data->data[stack_ptr->data->size - 1];
-    stack_ptr->data->data[stack_ptr->data->size] = 0;
-    stack_ptr->data->size--;
+    Data* data_struct = stack_ptr->data;
+    int* size = &data_struct->size;
+
+    *dst = data_struct->data[*size - 1];
+    data_struct->data[*size] = 0;
+    --*size;
 }
 
 

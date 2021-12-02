@@ -1,29 +1,6 @@
 #pragma once
 
 
-
-/// <summary>
-/// Error codes
-/// </summary>
-enum ErrorCodes
-{
-	//stack_ptr pointer has a NULL pointer or not valid fields
-	BADSTACK = 1,
-
-	//canary data was corrupted
-	CANARYDIED,
-
-	//size of data has negative length or 0 length at the pop command
-	BADSIZE,
-
-	//different hash of something data
-	BADHASH,
-
-	//error memory allocation
-	MEMORYERROR
-};
-
-
 void FileLog(const char* format, ...);
 
 /// <summary>
